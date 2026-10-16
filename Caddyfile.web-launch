@@ -1,0 +1,32 @@
+# GrainPort final web-launch shape
+#
+# Use this when:
+# - www.grainport.app should serve the marketing website
+# - grainport.app should serve the Expo web app
+
+grainport.app {
+	root * /srv/grainport/grainport-webapp/current
+	encode zstd gzip
+	try_files {path} {path}.html {path}/index.html /index.html
+	file_server
+}
+
+www.grainport.app {
+	root * /srv/grainport/grainport-website/current
+	file_server
+	encode zstd gzip
+}
+
+test.grainport.app {
+	root * /srv/grainport/grainport-website-test/current
+	file_server
+	encode zstd gzip
+}
+
+api.grainport.app {
+	reverse_proxy 127.0.0.1:4000
+}
+
+api-staging.grainport.app {
+	reverse_proxy 127.0.0.1:4001
+}
