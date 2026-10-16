@@ -42,7 +42,7 @@ log "Starting backup (date=$DATE)"
 # ---------------------------------------------------------------------------
 if [ -n "${PROD_SERVICE_ROLE_KEY:-}" ]; then
   PROD_REF="ufbayqdrluagcfabflih"
-  PROD_DB="postgresql://postgres:${PROD_SERVICE_ROLE_KEY}@db.${PROD_REF}.supabase.co:5432/postgres"
+  PROD_DB="postgresql://postgres:${PROD_SERVICE_ROLE_KEY}@db.${PROD_REF}.supabase.co:5432/postgres?sslmode=require"
   PROD_FILE="$BACKUP_DIR/prod_${DATE}.sql"
 
   log "Starting production database backup..."
@@ -54,7 +54,7 @@ fi
 
 if [ -n "${STAGING_SERVICE_ROLE_KEY:-}" ]; then
   STAGING_REF="zsjllpxjelcbyfvcduof"
-  STAGING_DB="postgresql://postgres:${STAGING_SERVICE_ROLE_KEY}@db.${STAGING_REF}.supabase.co:5432/postgres"
+  STAGING_DB="postgresql://postgres:${STAGING_SERVICE_ROLE_KEY}@db.${STAGING_REF}.supabase.co:5432/postgres?sslmode=require"
   STAGING_FILE="$BACKUP_DIR/staging_${DATE}.sql"
 
   log "Starting staging database backup..."
