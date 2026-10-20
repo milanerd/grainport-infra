@@ -13,9 +13,14 @@ set -euo pipefail
 #
 # Cron:  0 3 * * * /opt/backups/grainport-backup.sh >> /var/log/grainport-backup.log 2>&1
 #
-# Requires env vars:
-#   PROD_SERVICE_ROLE_KEY  — Supabase production service_role key
-#   STAGING_SERVICE_ROLE_KEY — Supabase staging service_role key (optional)
+# Requires env vars (auto-loaded from the API .env files below if not set):
+#   PROD_DB_PASSWORD      — Supabase production database password
+#   STAGING_DB_PASSWORD   — Supabase staging database password (optional)
+#   (these map to SUPABASE_DB_PASSWORD in the API .env files)
+#
+# NOTE: the Supabase service_role key (JWT) is NOT a valid Postgres password.
+# pg_dump needs the project's database password
+# (Supabase Dashboard → Database → Database password).
 #
 # Off-server sync (optional): set any of these to push after backup:
 #   BACKUP_RCLONE_REMOTE   — e.g. "gdrive:grainport-backups"
@@ -31,6 +36,14 @@ LOG_TAG="[grainport-backup]"
 API_STAGING_DIR="/srv/grainport/grainport-api-staging"
 API_PRODUCTION_DIR="/srv/grainport/grainport-api-production"
 
+# Auto-load database passwords from the API env files (gitignored, only on server).
+if [ -z "${PROD_DB_PASSWORD:-}" ] && [ -f "$API_PRODUCTION_DIR/.env.production" ]; then
+  PROD_DB_PASSWORD="$(grep -E '^SUPABASE_DB_PASSWORD=' "$API_PRODUCTION_DIR/.env.production" | head -n1 | cut -d= -f2-)"
+fi
+if [ -z "${STAGING_DB_PASSWORD:-}" ] && [ -f "$API_STAGING_DIR/.env.staging" ]; then
+  STAGING_DB_PASSWORD="$(grep -E '^SUPABASE_DB_PASSWORD=' "$API_STAGING_DIR/.env.staging" | head -n1 | cut -d= -f2-)"
+fi
+
 log() { echo "$LOG_TAG $(date '+%Y-%m-%d %H:%M:%S') $*"; }
 warn() { echo "$LOG_TAG $(date '+%Y-%m-%d %H:%M:%S') WARN $*" >&2; }
 
@@ -40,28 +53,28 @@ log "Starting backup (date=$DATE)"
 # ---------------------------------------------------------------------------
 # 1. PostgreSQL databases (Supabase, via pg_dump)
 # ---------------------------------------------------------------------------
-if [ -n "${PROD_SERVICE_ROLE_KEY:-}" ]; then
+if [ -n "${PROD_DB_PASSWORD:-}" ]; then
   PROD_REF="ufbayqdrluagcfabflih"
-  PROD_DB="postgresql://postgres.${PROD_REF}:${PROD_SERVICE_ROLE_KEY}@aws-1-eu-west-1.pooler.supabase.com:5432/postgres?sslmode=require"
+  PROD_DB="postgresql://postgres:${PROD_DB_PASSWORD}@db.${PROD_REF}.supabase.co:5432/postgres?sslmode=require"
   PROD_FILE="$BACKUP_DIR/prod_${DATE}.sql"
 
   log "Starting production database backup..."
   pg_dump "$PROD_DB" --no-owner --clean --file="$PROD_FILE"
   log "Production DB backup: $(du -h "$PROD_FILE" | cut -f1)"
 else
-  warn "PROD_SERVICE_ROLE_KEY not set — skipping production database backup"
+  warn "PROD_DB_PASSWORD not set — skipping production database backup"
 fi
 
-if [ -n "${STAGING_SERVICE_ROLE_KEY:-}" ]; then
+if [ -n "${STAGING_DB_PASSWORD:-}" ]; then
   STAGING_REF="zsjllpxjelcbyfvcduof"
-  STAGING_DB="postgresql://postgres.${STAGING_REF}:${STAGING_SERVICE_ROLE_KEY}@aws-0-eu-west-2.pooler.supabase.com:5432/postgres?sslmode=require"
+  STAGING_DB="postgresql://postgres:${STAGING_DB_PASSWORD}@db.${STAGING_REF}.supabase.co:5432/postgres?sslmode=require"
   STAGING_FILE="$BACKUP_DIR/staging_${DATE}.sql"
 
   log "Starting staging database backup..."
   pg_dump "$STAGING_DB" --no-owner --clean --file="$STAGING_FILE"
   log "Staging DB backup: $(du -h "$STAGING_FILE" | cut -f1)"
 else
-  warn "STAGING_SERVICE_ROLE_KEY not set — skipping staging database backup"
+  warn "STAGING_DB_PASSWORD not set — skipping staging database backup"
 fi
 
 
