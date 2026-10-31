@@ -119,21 +119,21 @@ Detailed steps are in [DEPLOY.md](/Users/milan/dev/grainport/grainfreak-website/
 
 ### GrainPort web app
 
-The GrainPort browser build is exported from `grainport-app`.
+The GrainPort browser build is exported from `grainport-webapp` (standalone Vite + React + TypeScript project).
 
 Build locally:
 
 ```bash
-cd grainport-app
-npx expo export --platform web
+cd grainport-webapp
+npm run build
 ```
 
-Deploy `grainport-app/dist/` to:
+Deploy `grainport-webapp/dist/` to:
 
 - production: `/srv/grainport/grainport-webapp/current`
 - staging: `/srv/grainport/grainport-webapp-test/current`
 
-Detailed web-app steps are in [WEB-LAUNCH.md](/Users/milan/dev/grainport/grainport-app/WEB-LAUNCH.md).
+Detailed web-app steps are in [WEB-PRODUCTION.md](/Users/milan/dev/grainport/grainport-docs/WEB-PRODUCTION.md).
 
 ## iOS App Release
 

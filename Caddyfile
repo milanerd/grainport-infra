@@ -18,7 +18,7 @@ grainfreak.com {
 
 www.grainfreak.com {
 	import secure_headers
-	root * /srv/grainport/grainfreak-website/current
+	root * /srv/grainfreak/grainfreak-website/current
 	file_server
 	encode zstd gzip
 }
@@ -26,7 +26,7 @@ www.grainfreak.com {
 # Optional staging website for GrainFreak marketing QA
 test.grainfreak.com {
 	import secure_headers
-	root * /srv/grainport/grainfreak-website-test/current
+	root * /srv/grainfreak/grainfreak-website-test/current
 	file_server
 	encode zstd gzip
 }
